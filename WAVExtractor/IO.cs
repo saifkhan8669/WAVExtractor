@@ -4,7 +4,7 @@ using System.IO;
 
 namespace WAVExtractor
 {
-    internal class IO
+    internal static class IO
 
 
     {
@@ -16,9 +16,7 @@ namespace WAVExtractor
 
             {
                 Console.Clear();
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("Input does not exist, please check your files and try again.");
-                Console.ResetColor();
+                Visual.Red("Input does not exist, please check your files and try again.");
                 Environment.Exit(1);
             }
 
@@ -45,7 +43,6 @@ namespace WAVExtractor
             {
                 Console.Clear();
                 Console.WriteLine("No WAVE streams detected, please check your input and try again.");
-                Directory.Delete(args[1]);
                 Environment.Exit(1);
             }
 
@@ -78,17 +75,13 @@ namespace WAVExtractor
 
         {
             Console.Clear();
-            Console.ForegroundColor = ConsoleColor.Yellow;
-            Console.WriteLine("WAVExtractor <input_file> <output_path>");
-            Console.WriteLine();
-            Console.WriteLine(":(Sad8669 | insomnyawolf (Contribution to new algorithm)");
-            Console.ResetColor();
+            Visual.Yellow("WAVExtractor <input_file> <output_path>");
         }
 
         public static bool IsWave(byte[] buffer, byte[] waveFormat, Stream bigStream)
 
         {
-            bigStream.Position += 4;  // RIFF|....WAVEfmt -> RIFF....|WAVEfmt
+            bigStream.Position += 4;  // RIFF|....WAVEfmt --> RIFF....|WAVEfmt,        "|" = Pointer
             buffer[0] = (byte)(bigStream.ReadByte());
             buffer[1] = (byte)(bigStream.ReadByte());
             buffer[2] = (byte)(bigStream.ReadByte());
@@ -111,5 +104,51 @@ namespace WAVExtractor
 
             return true;
         }
+
+        public static byte[] ReadBytes(this Stream stream, int count)
+        {
+            var result = new byte[count];
+            int offset = 0;
+            while (offset < count)
+            {
+                int bytesRead = stream.Read(result, offset, count - offset);
+                if (bytesRead <= 0)
+                    throw new IOException();
+                offset += bytesRead;
+            }
+            return result;
+        }
+
+        public static byte[] WriteBytes(this Stream stream)
+        {
+            return WriteBytes(stream, (int)stream.Length);
+        }
+
+        public static byte[] WriteBytes(this Stream stream, int count)
+        {
+            var result = new byte[count];
+            int offset = 0;
+            while (offset < count)
+            {
+                stream.Write(result, offset, count - offset);
+                int bytesRead = (int)stream.Position;
+                if (bytesRead <= 0)
+                    throw new IOException();
+                offset += bytesRead;
+            }
+            return result;
+        }
+
+        public static byte[] ReadBytes(this Stream stream)
+        {
+            return ReadBytes(stream, (int)stream.Length);
+        }
+       
+        public static void WAVStreamsCount(long count,int i)
+        
+        {
+            Console.Title = "File Progress: " + (i + 1) + "/" + count;
+        }
+
     }
 }
